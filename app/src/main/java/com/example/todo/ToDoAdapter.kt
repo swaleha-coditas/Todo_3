@@ -2,24 +2,26 @@ package com.example.todo
 
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.example.todo.databinding.RowLayoutBinding
 
-class ToDoAdapter(private var todos: List<ToDo>,private val onItemLongClickListener: OnItemLongClickListener ) : RecyclerView.Adapter<ToDoAdapter.ToDoViewHolder>() {
+class ToDoAdapter(private var todos: List<ToDo>,private val onItemLongClickListener: OnItemLongClickListener) : RecyclerView.Adapter<ToDoAdapter.ToDoViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ToDoViewHolder {
-       val view: View = LayoutInflater.from(parent.context).inflate(R.layout.row_layout,parent,false)
-        return ToDoViewHolder(view)
+        val binding:RowLayoutBinding=DataBindingUtil.inflate(
+            LayoutInflater.from(parent.context), R.layout.row_layout,parent,false)
+        return ToDoViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: ToDoViewHolder, position: Int) {
        val todo = todos[position]
-        holder.itemTitle.text = todo.title
-        holder.itemDescription.text = todo.description
-        holder.itemView.setOnLongClickListener{
-            onItemLongClickListener.onItemLongClickListener(position)
+        holder.bind(todos[position])
+         holder.binding.rowLayout.setOnLongClickListener{
+            onItemLongClickListener.onItemLongClickListener(position,it)
             return@setOnLongClickListener true
+
+
 
         }
 
@@ -28,10 +30,14 @@ class ToDoAdapter(private var todos: List<ToDo>,private val onItemLongClickListe
     override fun getItemCount(): Int {
         return todos.size
     }
-     inner class ToDoViewHolder(itemView: View):RecyclerView.ViewHolder(itemView){
-         var itemTitle : TextView = itemView.findViewById(R.id.itemTitle)
-         var itemDescription : TextView = itemView.findViewById(R.id.itemDescription)
 
-     }
+     inner class ToDoViewHolder(val binding: RowLayoutBinding):RecyclerView.ViewHolder(binding.root){
+       fun bind(todo : ToDo){
+           binding.apply{
+               title = todo.title
+               description = todo.description
+}
+}
+}
 
 }

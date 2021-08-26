@@ -1,7 +1,7 @@
 package com.example.todo
 
  data class ToDo (
-     val title : String,
-     val description : String
+     var title : String = "",
+     var description : String = ""
          )
 
