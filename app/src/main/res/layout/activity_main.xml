@@ -5,8 +5,8 @@
 
     <data>
    <variable
-    name="add"
-    type="com.example.todo.ToDo" />
+    name="todo"
+    type="com.example.todo.room.ToDo" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -24,7 +24,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.542" />
+            app:layout_constraintVertical_bias="0.542"
+            tools:listitem="@layout/row_layout"/>
 
         <Button
             android:id="@+id/addButton"
@@ -32,7 +33,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="16dp"
-            android:text="@string/addButton"
+            android:text="ADD"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.498"

@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <data>
         <variable
-            name="title"
-            type="String" />
+            name="todo"
+            type="com.example.todo.room.ToDo" />
 
-        <variable
-            name="description"
-            type="String" />
     </data>
 
     <androidx.cardview.widget.CardView
@@ -32,7 +30,8 @@
                 android:layout_width="104dp"
                 android:layout_height="38dp"
                 android:layout_marginTop="8dp"
-                android:text="@{title}"
+                android:text="@{todo.title}"
+                tools:text="Title"
                 android:textSize="30sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.051"
@@ -45,7 +44,8 @@
                 android:layout_height="44dp"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="16dp"
-                android:text="@{description}"
+                android:text="@{todo.description}"
+                tools:text="Description"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"

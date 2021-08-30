@@ -2,35 +2,45 @@ package com.example.todo
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.databinding.DataBindingUtil
-import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.todo.adapter.ToDoAdapter
 import com.example.todo.databinding.ActivityMainBinding
+import com.example.todo.room.ToDo
+import com.example.todo.viewmodel.ToDoViewModel
 
 
-class MainActivity : AppCompatActivity(), OnItemLongClickListener, NewDialogFragment.NewDialogListener{
-    private lateinit var binding: ActivityMainBinding
-    private lateinit var addButton: Button
-    private lateinit var todos: ArrayList<ToDo>
-    private lateinit var todoAdapter: ToDoAdapter
+class MainActivity : AppCompatActivity(), OnItemLongClickListener{
+
     private lateinit var viewModel: ToDoViewModel
+    private lateinit var binding: ActivityMainBinding
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        viewModel = ViewModelProvider(this).get(ToDoViewModel::class.java)
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
+        val todoAdapter = ToDoAdapter(this,this)
+        binding.recyclerView.adapter = todoAdapter
+        binding.addButton.setOnClickListener { addInfo() }
 
-        binding.recyclerView.adapter = ToDoAdapter(viewModel.todo, this)
+
+        viewModel = ViewModelProvider(this,ViewModelProvider.AndroidViewModelFactory.getInstance(application)).get(
+            ToDoViewModel::class.java)
+        viewModel.allToDos.observe(this, Observer { list->
+            list?.let {
+                todoAdapter.updateItem(it)
+            }
+
+        })
 
         //Dummy Data
         //  val todos = ArrayList<ToDo>()
@@ -38,16 +48,10 @@ class MainActivity : AppCompatActivity(), OnItemLongClickListener, NewDialogFrag
         // todos.add(ToDo("Item 2", "Have coffee"))
         //   todos.add(ToDo("Item 3", "Talk to friends"))
         //  todos.add(ToDo("Item 4", "Buy stuffs"))
-        todos = ArrayList()
-        addButton = findViewById(R.id.addButton)
-        todoAdapter = ToDoAdapter(todos, this)
-        binding.addButton.setOnClickListener { addInfo() }
-
 
     }
 
-
-    override fun onItemLongClickListener(position: Int, view: View) {
+    override fun onItemLongClickListener(toDo : ToDo, view : View) {
         val popupMenu = PopupMenu(this, view)
         popupMenu.inflate(R.menu.show_menu)
         popupMenu.show()
@@ -55,30 +59,44 @@ class MainActivity : AppCompatActivity(), OnItemLongClickListener, NewDialogFrag
         popupMenu.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.update_item -> {
-                     fun updateItem(position: Int) {
-                         Toast.makeText(this, "Updated", Toast.LENGTH_SHORT).show()
-                        val newFragment = NewDialogFragment.newInstance(R.string.add_title,R.string.add_description,position)
-                        newFragment.show(supportFragmentManager, "newItem")
-                    }
+                    val v = LayoutInflater.from(this).inflate(R.layout.add_dialog,null)
+                    val addTitle = v.findViewById<TextView>(R.id.addTitle)
+                    val addDescription = v.findViewById<TextView>(R.id.addDescription)
+                    AlertDialog.Builder(this)
+                        .setView(v)
+                        .setPositiveButton("Ok"){
+                                dialog,_->
+                            viewModel.updateToDo(toDo)
+                            Toast.makeText(this,"User Information is Edited",Toast.LENGTH_SHORT).show()
+                            dialog.dismiss()
+
+                        }
+                        .setNegativeButton("Cancel"){
+                                dialog,_->
+                            dialog.dismiss()
+
+                        }
+                        .create()
+                        .show()
 
                 }
                 R.id.delete_item -> {
-
                     AlertDialog.Builder(this)
                         .setTitle("Delete")
                         .setMessage("Are you sure delete this Information")
-                        .setPositiveButton("Yes") { dialog, _ ->
-                            todos.removeAt(position)
-                            todoAdapter.notifyItemRemoved(position)
-                            Toast.makeText(this, "Deleted this Information", Toast.LENGTH_SHORT)
-                                .show()
+                        .setPositiveButton("Yes"){
+                                dialog,_->
+                                    viewModel.deleteToDo(toDo)
+                                    Toast.makeText(this,"Deleted this Information",Toast.LENGTH_SHORT).show()
                             dialog.dismiss()
                         }
-                        .setNegativeButton("No") { dialog, _ ->
+                        .setNegativeButton("No"){
+                                dialog,_->
                             dialog.dismiss()
                         }
                         .create()
                         .show()
+
                 }
             }
 
@@ -87,56 +105,30 @@ class MainActivity : AppCompatActivity(), OnItemLongClickListener, NewDialogFrag
         }
 
     }
-    private fun addInfo() {
-        val newFragment = NewDialogFragment.newInstance(R.string.add_title,R.string.add_description, null)
-        newFragment.show(supportFragmentManager, "newItem")
-    }
 
-    override fun onDialogPositiveClick(
-        dialog: DialogFragment,
-        toDo: ToDo,
-        isEdit: Boolean,
-        position: Int?
-    ) {
-        if (!isEdit) {
-            viewModel.todo.add(toDo)
-        } else {
-            viewModel.updateItem(position!!, toDo)
-            binding.recyclerView.adapter?.notifyDataSetChanged()
+   private fun addInfo() {
+       val inflater = LayoutInflater.from(this)
+       val v = inflater.inflate(R.layout.add_dialog, null)
+       val addTitle = v.findViewById<TextView>(R.id.addTitle)
+       val addDescription = v.findViewById<TextView>(R.id.addDescription)
+       val addDialog = AlertDialog.Builder(this)
+       with(addDialog) {
+            setView(v)
         }
+        addDialog.setPositiveButton("Ok") { dialog, _ ->
+            val addTitleText = addTitle.text.toString()
+            val addDescriptionText = addDescription.text.toString()
+            viewModel.insertToDo(ToDo(addTitleText, addDescriptionText))
+            Toast.makeText(this, "Adding User Information Success", Toast.LENGTH_SHORT).show()
+            dialog.dismiss()
+        }
+        addDialog.setNegativeButton("Cancel") { dialog, _ ->
+            dialog.dismiss()
+            Toast.makeText(this, "Cancel", Toast.LENGTH_SHORT).show()
+        }
+        addDialog.create()
+        addDialog.show()
     }
-
-    override fun onDialogNegativeClick(dialog: DialogFragment) {
-        Toast.makeText(this, "Cancelled", Toast.LENGTH_SHORT).show()
-    }
-
-
-//   private fun addInfo() {
-//       val inflater = LayoutInflater.from(this)
-//        val v = inflater.inflate(R.layout.add_dialog, null)
-//        val addTitle = v.findViewById<TextView>(R.id.addTitle)
-//        val addDescription = v.findViewById<TextView>(R.id.addDescription)
-//        val addDialog = AlertDialog.Builder(this)
-//
-//        with(addDialog) {
-//
-//            setView(v)
-//        }
-//        addDialog.setPositiveButton("Ok") { dialog, _ ->
-//            val addTitleText = addTitle.text.toString()
-//            val addDescriptionText = addDescription.text.toString()
-//            todos.add(ToDo("Title: $addTitleText", "Description. : $addDescriptionText"))
-//            todoAdapter.notifyDataSetChanged()
-//            Toast.makeText(this, "Adding User Information Success", Toast.LENGTH_SHORT).show()
-//            dialog.dismiss()
-//        }
-//        addDialog.setNegativeButton("Cancel") { dialog, _ ->
-//            dialog.dismiss()
-//            Toast.makeText(this, "Cancel", Toast.LENGTH_SHORT).show()
-//        }
-//        addDialog.create()
-//        addDialog.show()
-//    }
 }
 
 
