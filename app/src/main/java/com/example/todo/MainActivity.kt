@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
-import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -24,7 +23,6 @@ class MainActivity : AppCompatActivity(), OnItemLongClickListener{
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
@@ -38,6 +36,7 @@ class MainActivity : AppCompatActivity(), OnItemLongClickListener{
         viewModel.allToDos.observe(this, Observer { list->
             list?.let {
                 todoAdapter.updateItem(it)
+
             }
 
         })
@@ -66,6 +65,8 @@ class MainActivity : AppCompatActivity(), OnItemLongClickListener{
                         .setView(v)
                         .setPositiveButton("Ok"){
                                 dialog,_->
+                            toDo.title = addTitle.text.toString()
+                            toDo.description = addDescription.text.toString()
                             viewModel.updateToDo(toDo)
                             Toast.makeText(this,"User Information is Edited",Toast.LENGTH_SHORT).show()
                             dialog.dismiss()
@@ -118,16 +119,20 @@ class MainActivity : AppCompatActivity(), OnItemLongClickListener{
         addDialog.setPositiveButton("Ok") { dialog, _ ->
             val addTitleText = addTitle.text.toString()
             val addDescriptionText = addDescription.text.toString()
-            viewModel.insertToDo(ToDo(addTitleText, addDescriptionText))
-            Toast.makeText(this, "Adding User Information Success", Toast.LENGTH_SHORT).show()
+            if(addTitleText.isNotEmpty() || addDescriptionText.isNotEmpty()) {
+                viewModel.insertToDo(ToDo(addTitleText, addDescriptionText))
+
+                Toast.makeText(this, "Adding User Information Success", Toast.LENGTH_SHORT).show()
+            }
+
             dialog.dismiss()
         }
         addDialog.setNegativeButton("Cancel") { dialog, _ ->
             dialog.dismiss()
             Toast.makeText(this, "Cancel", Toast.LENGTH_SHORT).show()
         }
-        addDialog.create()
-        addDialog.show()
+        .create()
+        .show()
     }
 }
 

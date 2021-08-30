@@ -2,7 +2,6 @@ package com.example.todo.room
 
 import androidx.lifecycle.LiveData
 import androidx.room.*
-import com.example.todo.room.ToDo
 
 
 @Dao
